@@ -1,4 +1,5 @@
-const Company = require("../../../Models/Company")
+const Job = require("../../../Models/Job")
+const User = require("../../../Models/User")
 const Validator = require("../../Validator/Auth")
 const bcrypt = require('bcryptjs')
 
@@ -6,7 +7,8 @@ const bcrypt = require('bcryptjs')
 const Index = async (req, res, next) => {
     try {
         const id = req.user._id
-        const result = await Company.findById({ _id: id }, { password: 0 }).exec()
+        const openedJob = await Job.countDocuments({ createdBy: id }).exec()
+        const result = await User.findById({ _id: id }, { password: 0 }).exec()
 
         if (!result) {
             return res.status(404).json({
@@ -17,7 +19,9 @@ const Index = async (req, res, next) => {
 
         res.status(200).json({
             status: true,
-            company: result
+            user: result,
+            openedJob,
+            applied: result.applications ? result.applications.length : 0
         })
     } catch (error) {
         if (error) next(error)
@@ -31,7 +35,7 @@ const Update = async (req, res, next) => {
         const { name, website, description } = req.body
 
         // validate check
-        const validate = await Validator.CompanyUpdate(req.body)
+        const validate = await Validator.Update(req.body)
         if (validate.isValid === false) {
             return res.status(422).json({
                 status: false,
@@ -39,7 +43,7 @@ const Update = async (req, res, next) => {
             })
         }
 
-        const updateAccount = await Company.findByIdAndUpdate(
+        const updateAccount = await User.findByIdAndUpdate(
             { _id: id },
             { $set: { name, website, description } },
             { $multi: false }
@@ -75,7 +79,7 @@ const UpdatePassword = async (req, res, next) => {
         }
 
         // Account find using id
-        const account = await Company.findById({ _id: id }).exec()
+        const account = await User.findById({ _id: id }).exec()
         if (!account) {
             return res.status(404).json({
                 status: false,
@@ -87,7 +91,7 @@ const UpdatePassword = async (req, res, next) => {
         const hashNewPassword = await bcrypt.hash(newPassword, 10)
 
         // Update account
-        const updateAccount = await Company.findOneAndUpdate(
+        const updateAccount = await User.findOneAndUpdate(
             { _id: id },
             { $set: { password: hashNewPassword } },
             { $multi: false }
@@ -109,8 +113,41 @@ const UpdatePassword = async (req, res, next) => {
     }
 }
 
+// My Applications
+const MyApplications = async (req, res, next) => {
+    try {
+        const id = req.user._id
+
+        const result = await User.findById({ _id: id }, { applications: 1 })
+            .populate({
+                path: "applications",
+                select: "title area location category jobType createdBy",
+                populate: {
+                    path: "createdBy",
+                    select: "name website"
+                }
+            })
+            .exec()
+
+        if (!result) {
+            return res.status(404).json({
+                status: false,
+                message: "Login required."
+            })
+        }
+
+        res.status(200).json({
+            status: true,
+            applications: result.applications
+        })
+    } catch (error) {
+        if (error) next(error)
+    }
+}
+
 module.exports = {
     Index,
     Update,
-    UpdatePassword
+    UpdatePassword,
+    MyApplications
 }

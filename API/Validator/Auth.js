@@ -16,7 +16,6 @@ const Create = user => {
 
     if (!user.name) error.name = "Name is required"
     if (!user.email) error.email = "Email is required"
-    if (!user.role) error.role = "Created for is required"
     if (!user.password) error.password = "Password is required"
 
     return {
@@ -25,7 +24,7 @@ const Create = user => {
     }
 }
 
-const CompanyUpdate = user => {
+const Update = user => {
     let error = {}
 
     if (!user.name) error.name = "Name is required"
@@ -41,5 +40,5 @@ const CompanyUpdate = user => {
 module.exports = {
     Login,
     Create,
-    CompanyUpdate
+    Update
 }

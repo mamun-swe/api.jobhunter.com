@@ -8,7 +8,7 @@ const validateEmail = function (email) {
     return true
 }
 
-const companySchema = new Schema({
+const userSchema = new Schema({
     name: {
         type: String,
         trim: true,
@@ -25,17 +25,12 @@ const companySchema = new Schema({
     role: {
         type: String,
         trim: true,
-        default: "company"
+        default: "user"
     },
     password: {
         type: String,
         trim: true,
         required: true
-    },
-    image: {
-        type: String,
-        trim: true,
-        default: null
     },
     website: {
         type: String,
@@ -46,11 +41,16 @@ const companySchema = new Schema({
         type: String,
         trim: true,
         default: null
-    }
+    },
+    applications: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Job',
+        default: null
+    }]
 }, {
     timestamps: true
 })
 
 
-const Company = model("Company", companySchema)
-module.exports = Company
+const User = model("User", userSchema)
+module.exports = User

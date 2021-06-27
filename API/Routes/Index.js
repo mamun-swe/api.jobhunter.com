@@ -1,14 +1,12 @@
 const express = require("express")
 const Router = express.Router()
 const { authRouter } = require("./Auth")
-const { seekerRouter } = require("./Seeker")
-const { companyRouter } = require("./Company")
+const { userRouter } = require("./User")
 const { websiteRouter } = require("./Website")
-const { Company, Seeker } = require("../Middleware/Permession")
+const { User} = require("../Middleware/Permession")
 
 Router.use("/auth", authRouter)
-Router.use("/seeker", Seeker, seekerRouter)
-Router.use("/company", Company, companyRouter)
+Router.use("/user", User, userRouter)
 Router.use("/website", websiteRouter)
 
 module.exports = Router

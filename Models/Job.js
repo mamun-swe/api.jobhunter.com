@@ -1,9 +1,9 @@
 const { Schema, model } = require("mongoose")
 
 const jobSchema = new Schema({
-    company: {
+    createdBy: {
         type: Schema.Types.ObjectId,
-        ref: 'Company',
+        ref: 'User',
         require: true
     },
     title: {
@@ -45,8 +45,8 @@ const jobSchema = new Schema({
     jobType: {
         type: String,
         trim: true,
-        default: "full time",
-        enum: ["full time", "part-time"]
+        default: "Full time",
+        enum: ["Full time", "Part-time"]
     },
     vacancy: {
         type: Number,
@@ -63,14 +63,9 @@ const jobSchema = new Schema({
         trim: true,
         default: null
     },
-    companyApplicants: [{
+    applicants: [{
         type: Schema.Types.ObjectId,
-        ref: 'Company',
-        default: null
-    }],
-    seekerApplicants: [{
-        type: Schema.Types.ObjectId,
-        ref: 'Seeker',
+        ref: 'User',
         default: null
     }],
     comments: [{

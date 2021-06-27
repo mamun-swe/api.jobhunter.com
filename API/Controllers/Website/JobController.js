@@ -1,5 +1,9 @@
 const jwt = require('jsonwebtoken')
 const Job = require("../../../Models/Job")
+const User = require("../../../Models/User")
+const Comment = require("../../../Models/Comment")
+const CheckId = require("../../Middleware/CheckId")
+const Validator = require("../../Validator/Comment")
 
 // List of latest jobs
 const Index = async (req, res, next) => {
@@ -8,7 +12,15 @@ const Index = async (req, res, next) => {
         startDay.setUTCHours(0, 0, 0, 0)
 
         const results = await Job.find({ "expiredAt": { "$gte": new Date(startDay) } })
-            .populate("company", "name")
+            .populate("createdBy", "name")
+            .populate({
+                path: "comments",
+                select: "comment user",
+                populate: {
+                    path: "user",
+                    select: "name"
+                }
+            })
             .sort({ _id: -1 })
             .exec()
 
@@ -38,7 +50,7 @@ const Show = async (req, res, next) => {
         const result = await Job.findOne(
             { $and: [{ _id: id }, { "expiredAt": { "$gte": new Date(startDay) } }] }
         )
-            .populate("company", "name email website description")
+            .populate("createdBy", "name email website description")
             .exec()
 
         if (!result) {
@@ -53,10 +65,7 @@ const Show = async (req, res, next) => {
             job: result
         })
     } catch (error) {
-        if (error) {
-            console.log(error)
-            next(error)
-        }
+        if (error) next(error)
     }
 }
 
@@ -65,14 +74,16 @@ const Apply = async (req, res, next) => {
     try {
         const { jobId } = req.body
         const token = await req.headers.authorization
+
+        if (!jobId) return res.status(404).json({ message: 'Job ID required' })
         if (!token) return res.status(404).json({ message: 'Login required' })
 
         // decode token
         const splitToken = await req.headers.authorization.split(' ')[1]
         const decode = await jwt.verify(splitToken, process.env.JWT_SECRET)
-        const role = decode.role
         const applicantId = decode._id
 
+        // Check job available/not
         const postedJob = await Job.findById({ _id: jobId }).exec()
         if (!postedJob) {
             return res.status(404).json({
@@ -81,21 +92,40 @@ const Apply = async (req, res, next) => {
             })
         }
 
-        if (role === "company") {
-            // Add to company applicatn
-            await Job.findOneAndUpdate(
-                { _id: jobId },
-                { $push: { companyApplicants: applicantId } },
-                { new: true }
-            ).exec()
-        } else {
-            // Add to seeker applicatn
-            await Job.findOneAndUpdate(
-                { _id: jobId },
-                { $push: { seekerApplicants: applicantId } },
-                { new: true }
-            ).exec()
+        // Check is myjob/not
+        const myJob = await Job.findOne({ $and: [{ _id: jobId }, { createdBy: applicantId }] }).exec()
+        if (myJob) {
+            return res.status(404).json({
+                status: false,
+                message: "This is your own posted job."
+            })
         }
+
+        // Check already applied / not
+        const checkUser = await User.findById({ _id: applicantId }, { applications: 1 })
+        if (checkUser.applications && checkUser.applications.length) {
+            const exist = checkUser.applications.find(x => x == jobId)
+            if (exist) {
+                return res.status(404).json({
+                    status: false,
+                    message: "Already applied."
+                })
+            }
+        }
+
+        // Apply to job
+        await Job.findOneAndUpdate(
+            { _id: jobId },
+            { $push: { applicants: applicantId } },
+            { new: true }
+        ).exec()
+
+        // Save job to my account
+        await User.findOneAndUpdate(
+            { _id: applicantId },
+            { $push: { applications: jobId } },
+            { new: true }
+        ).exec()
 
         res.status(201).json({
             status: true,
@@ -121,7 +151,15 @@ const Search = async (req, res, next) => {
                 { "expiredAt": { "$gte": new Date(startDay) } }
             ]
         })
-            .populate("company", "name")
+            .populate("createdBy", "name")
+            .populate({
+                path: "comments",
+                select: "comment user",
+                populate: {
+                    path: "user",
+                    select: "name"
+                }
+            })
             .sort({ _id: -1 })
             .exec()
 
@@ -143,9 +181,49 @@ const Search = async (req, res, next) => {
     }
 }
 
+// Comment in job post
+const JobComment = async (req, res, next) => {
+    try {
+        const user = req.user._id
+        const { jobId, comment } = req.body
+        await CheckId(jobId)
+
+        // validate check
+        const validate = await Validator.Create(req.body)
+        if (validate.isValid === false) {
+            return res.status(422).json({
+                status: false,
+                message: validate.error
+            })
+        }
+
+        const newComment = new Comment({
+            user,
+            job: jobId,
+            comment
+        })
+
+        await Job.findOneAndUpdate(
+            { _id: jobId },
+            { $push: { comments: newComment._id } },
+            { new: true }
+        ).exec()
+
+        await newComment.save()
+
+        res.status(201).json({
+            status: true,
+            message: "You are commented on this job post."
+        })
+    } catch (error) {
+        if (error) next(error)
+    }
+}
+
 module.exports = {
     Index,
     Show,
     Apply,
-    Search
+    Search,
+    JobComment
 }

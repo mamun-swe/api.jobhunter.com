@@ -1,5 +1,4 @@
-const Seeker = require("../../../Models/Seeker")
-const Company = require("../../../Models/Company")
+const User = require("../../../Models/User")
 const Validator = require("../../Validator/Auth")
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
@@ -7,7 +6,6 @@ const bcrypt = require('bcryptjs')
 // Login to account
 const Login = async (req, res, next) => {
     try {
-        let account
         const { email, password } = req.body
 
         // validate check
@@ -20,11 +18,7 @@ const Login = async (req, res, next) => {
         }
 
         // Account find using email
-        account = await Seeker.findOne({ email: email }).exec()
-        if (!account) {
-            account = await Company.findOne({ email: email }).exec()
-        }
-
+        const account = await User.findOne({ email: email }).exec()
         if (!account) {
             return res.status(404).json({
                 status: false,
@@ -62,9 +56,7 @@ const Login = async (req, res, next) => {
 // Create an account
 const Register = async (req, res, next) => {
     try {
-        let newUser
-        let existAccount
-        const { name, email, role, password } = req.body
+        const { name, email, password } = req.body
 
         // validate check
         const validate = await Validator.Create(req.body)
@@ -75,8 +67,7 @@ const Register = async (req, res, next) => {
             })
         }
 
-        if (role === "company") existAccount = await Company.findOne({ email: email })
-        if (role === "seeker") existAccount = await Seeker.findOne({ email: email })
+        const existAccount = await User.findOne({ email: email })
         if (existAccount) {
             return res.status(422).json({
                 status: false,
@@ -86,24 +77,11 @@ const Register = async (req, res, next) => {
 
         // Password Hash
         const hashPassword = await bcrypt.hash(password, 10)
-
-        if (role === "company") {
-            newUser = new Company({
-                name,
-                email,
-                role,
-                password: hashPassword
-            })
-        }
-
-        if (role === "seeker") {
-            newUser = new Seeker({
-                name,
-                email,
-                role,
-                password: hashPassword
-            })
-        }
+        const newUser = new User({
+            name,
+            email,
+            password: hashPassword
+        })
 
         const saveUser = await newUser.save()
         if (!saveUser)
