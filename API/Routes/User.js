@@ -7,6 +7,7 @@ userRouter.get("/profile", Profile.Index)
 userRouter.put("/profile", Profile.Update)
 userRouter.put("/password-update", Profile.UpdatePassword)
 userRouter.get("/my-applications", Profile.MyApplications)
+userRouter.post("/upload-cv", Profile.UploadCv)
 
 userRouter.get("/job", Job.Index)
 userRouter.post("/job", Job.Create)

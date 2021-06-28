@@ -46,7 +46,12 @@ const userSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Job',
         default: null
-    }]
+    }],
+    cv: {
+        type: String,
+        trim: true,
+        default: null
+    }
 }, {
     timestamps: true
 })

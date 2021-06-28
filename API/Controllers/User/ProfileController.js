@@ -1,6 +1,7 @@
 const Job = require("../../../Models/Job")
 const User = require("../../../Models/User")
 const Validator = require("../../Validator/Auth")
+const { UploadFile, Host } = require("../../Helpers/_helpers")
 const bcrypt = require('bcryptjs')
 
 // Profile Index of company
@@ -8,7 +9,7 @@ const Index = async (req, res, next) => {
     try {
         const id = req.user._id
         const openedJob = await Job.countDocuments({ createdBy: id }).exec()
-        const result = await User.findById({ _id: id }, { password: 0 }).exec()
+        let result = await User.findById({ _id: id }, { password: 0 }).exec()
 
         if (!result) {
             return res.status(404).json({
@@ -17,6 +18,7 @@ const Index = async (req, res, next) => {
             })
         }
 
+        result.cv = result.cv ? Host(req) + "uploads/" + result.cv : null
         res.status(200).json({
             status: true,
             user: result,
@@ -145,9 +147,52 @@ const MyApplications = async (req, res, next) => {
     }
 }
 
+// Upload CV
+const UploadCv = async (req, res, next) => {
+    try {
+        const id = req.user._id
+        const file = req.files
+
+        if (!file) {
+            return res.status(422).json({
+                cv: "CV is required."
+            })
+        }
+
+        const uploadFile = await UploadFile(file.cv, './uploads/')
+        if (!uploadFile) {
+            return res.status(501).json({
+                status: false,
+                message: 'Failed to upload banner'
+            })
+        }
+
+        const updateAccount = await User.findByIdAndUpdate(
+            { _id: id },
+            { $set: { cv: uploadFile } },
+            { $multi: false }
+        ).exec()
+
+        if (!updateAccount) {
+            return res.status(404).json({
+                status: false,
+                message: 'Failed to Upload.'
+            })
+        }
+
+        res.status(201).json({
+            status: true,
+            message: 'Successfully CV uploaded'
+        })
+    } catch (error) {
+        if (error) next(error)
+    }
+}
+
 module.exports = {
     Index,
     Update,
     UpdatePassword,
-    MyApplications
+    MyApplications,
+    UploadCv
 }

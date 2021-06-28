@@ -7,6 +7,7 @@ const nocache = require('nocache')
 const compression = require('compression')
 const helmet = require('helmet')
 require('dotenv').config()
+const fileUpload = require('express-fileupload')
 const Route = require('./API/Routes/Index')
 
 const app = express()
@@ -14,9 +15,12 @@ app.use(compression())
 app.use(helmet())
 app.use(cors())
 app.use(morgan('dev'))
+app.use(fileUpload())
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(nocache())
+
+app.use('/uploads', express.static('uploads/'))
 
 // API URL's
 app.use("/api/v1", Route)
