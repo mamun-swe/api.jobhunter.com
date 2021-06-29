@@ -7,8 +7,11 @@ const nocache = require('nocache')
 const compression = require('compression')
 const helmet = require('helmet')
 require('dotenv').config()
+const http = require("http")
+const socketio = require("socket.io")
 const fileUpload = require('express-fileupload')
 const Route = require('./API/Routes/Index')
+const { GetMessages, Store } = require("./API/Controllers/User/ChatController")
 
 const app = express()
 app.use(compression())
@@ -57,6 +60,79 @@ app.use((error, req, res, next) => {
 })
 
 
+//  ---------- Socket IO -------------
+const server = http.createServer(app)
+const io = socketio(server)
+
+let rooms = []
+
+io.on('connection', (socket) => {
+    console.log('User connected')
+
+    // Join to room
+    socket.on('join', async ({ room }) => {
+        try {
+            let existRoom
+
+            let updatedRoomName1 = `${room.author}--with--${room.reciver._id}`
+            let updatedRoomName2 = `${room.reciver._id}--with--${room.author}`
+
+            existRoom = rooms.find(x => x === updatedRoomName1)
+            if (!existRoom) existRoom = rooms.find(x => x === updatedRoomName2)
+
+            if (!existRoom) {
+                rooms.push(updatedRoomName1)
+                socket.join(updatedRoomName1)
+            } else {
+                socket.join(existRoom)
+            }
+
+            socket.emit('message', {
+                author: "System",
+                type: "text",
+                data: {
+                    text: `Welcome to chat system. Let's start your conversation with ${room.reciver.name}`
+                }
+            })
+
+        } catch (error) {
+            if (error) next(error)
+        }
+    })
+
+    // Transfer Messages
+    socket.on('message', async (data) => {
+        try {
+            let room
+
+            let updatedRoomName1 = `${data.author}--with--${data.to}`
+            let updatedRoomName2 = `${data.to}--with--${data.author}`
+
+            room = rooms.find(x => x === updatedRoomName1)
+            if (!room) room = rooms.find(x => x === updatedRoomName2)
+
+            const storeMessage = await Store(data, room)
+
+            if (storeMessage) {
+                socket.broadcast.to(room).emit('message', {
+                    author: data.sender,
+                    type: "text",
+                    data: {
+                        text: data.message
+                    }
+                })
+            }
+        } catch (error) {
+            if (error) next(error)
+        }
+    })
+
+    // Disconnect
+    socket.on('disconnect', () => {
+        console.log('User disconnected')
+    })
+})
+
 // DB Connection here
 mongoose.connect(process.env.DB_URL, {
     useNewUrlParser: true,
@@ -72,6 +148,7 @@ mongoose.connect(process.env.DB_URL, {
 
 // App Port
 const port = process.env.PORT || 5000
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`App running on ${port} port`)
 })
+
