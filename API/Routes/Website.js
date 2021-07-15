@@ -8,5 +8,6 @@ websiteRouter.get("/jobs/:id", Job.Show)
 websiteRouter.post("/apply", Job.Apply)
 websiteRouter.get("/search", Job.Search)
 websiteRouter.post("/comment", User, Job.JobComment)
+websiteRouter.get("/profile/:id", User, Job.Profile)
 
 module.exports = { websiteRouter }

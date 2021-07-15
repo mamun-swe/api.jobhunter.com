@@ -220,10 +220,34 @@ const JobComment = async (req, res, next) => {
     }
 }
 
+// Visit profile
+const Profile = async (req, res, next) => {
+    try {
+        const {id} = req.params
+
+        let result = await User.findOne({ _id: id }, { password: 0 }).exec()
+
+        if (!result) {
+            return res.status(404).json({
+                status: false,
+                message: "Account not found."
+            })
+        }
+
+        res.status(200).json({
+            status: true,
+            user: result
+        })
+    } catch (error) {
+        if (error) next(error)
+    }
+}
+
 module.exports = {
     Index,
     Show,
     Apply,
     Search,
-    JobComment
+    JobComment,
+    Profile
 }
