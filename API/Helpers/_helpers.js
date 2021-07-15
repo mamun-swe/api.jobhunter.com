@@ -17,7 +17,7 @@ const UploadFile = async (data, path) => {
 // Get Host URL
 const Host = (req) => {
     // return req.protocol + '://' + req.get('host') + '/'
-    return 'http://' + req.get('host') + '/'
+    return 'https://' + req.get('host') + '/'
 }
 
 
