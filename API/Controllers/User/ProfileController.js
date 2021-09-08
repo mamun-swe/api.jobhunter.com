@@ -1,24 +1,19 @@
 const Job = require("../../../Models/Job")
 const User = require("../../../Models/User")
 const Validator = require("../../Validator/Auth")
-const { UploadFile, Host } = require("../../Helpers/_helpers")
+const { UploadFile, DeleteFile, Host } = require("../../Helpers/_helpers")
 const bcrypt = require('bcryptjs')
 
-// Profile Index of company
+// Profile Index of user
 const Index = async (req, res, next) => {
     try {
         const id = req.user._id
         const openedJob = await Job.countDocuments({ createdBy: id }).exec()
         let result = await User.findById({ _id: id }, { password: 0 }).exec()
 
-        if (!result) {
-            return res.status(404).json({
-                status: false,
-                message: "Account not found."
-            })
-        }
-
         result.cv = result.cv ? Host(req) + "uploads/" + result.cv : null
+        result.image = result.image ? Host(req) + "uploads/users/" + result.image : null
+
         res.status(200).json({
             status: true,
             user: result,
@@ -189,10 +184,61 @@ const UploadCv = async (req, res, next) => {
     }
 }
 
+// Upload profile picture
+const UploadPicture = async (req, res, next) => {
+    try {
+        const id = req.user._id
+        const file = req.files
+
+        if (!file) return res.status(422).json({ image: "Image is required." })
+
+        const uploadFile = await UploadFile(file.image, './uploads/users/')
+        if (!uploadFile) {
+            return res.status(501).json({
+                status: false,
+                message: 'Failed to upload picture.'
+            })
+        }
+
+        // check old file 
+        const account = await User.findById({ _id: id }, { image: 1 }).exec()
+        if (!account) {
+            return res.status(404).json({
+                status: false,
+                message: 'Account not avaiable.'
+            })
+        }
+
+        if (account.image) await DeleteFile('./uploads/users/', account.image)
+
+        // update account with new file
+        const updateAccount = await User.findByIdAndUpdate(
+            { _id: id },
+            { $set: { image: uploadFile } },
+            { $multi: false }
+        ).exec()
+
+        if (!updateAccount) {
+            return res.status(404).json({
+                status: false,
+                message: 'Failed to Upload.'
+            })
+        }
+
+        res.status(201).json({
+            status: true,
+            message: 'Successfully picture added.'
+        })
+    } catch (error) {
+        if (error) next(error)
+    }
+}
+
 module.exports = {
     Index,
     Update,
     UpdatePassword,
     MyApplications,
-    UploadCv
+    UploadCv,
+    UploadPicture
 }

@@ -1,3 +1,5 @@
+const fs = require("fs")
+
 // Single file upload
 const UploadFile = async (data, path) => {
     try {
@@ -14,11 +16,23 @@ const UploadFile = async (data, path) => {
     }
 }
 
+// Delete file from directory
+const DeleteFile = (destination, file) => {
+    fs.unlink(destination + file, function (error) {
+        if (error) return error
+        return
+    });
+}
+
 // Get Host URL
 const Host = (req) => {
-    // return req.protocol + '://' + req.get('host') + '/'
-    return 'https://' + req.get('host') + '/'
+    return req.protocol + '://' + req.get('host') + '/'
+    // return 'https://' + req.get('host') + '/'
 }
 
 
-module.exports = { UploadFile, Host }
+module.exports = {
+    UploadFile,
+    DeleteFile,
+    Host
+}

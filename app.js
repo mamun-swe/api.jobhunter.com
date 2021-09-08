@@ -24,6 +24,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(nocache())
 
 app.use('/uploads', express.static('uploads/'))
+app.use('/uploads/users', express.static('uploads/users/'))
 
 // API URL's
 app.use("/api/v1", Route)
