@@ -14,12 +14,27 @@ const userSchema = new Schema({
         trim: true,
         required: true
     },
+    phone: {
+        type: String,
+        trim: true,
+        default: null
+    },
     email: {
         type: String,
         unique: true,
         trim: true,
         lowercase: true,
         validate: [validateEmail, "Please provide a valid email address"],
+        default: null
+    },
+    presentAddress: {
+        type: String,
+        trim: true,
+        default: null
+    },
+    permanentAddress: {
+        type: String,
+        trim: true,
         default: null
     },
     role: {
@@ -53,6 +68,16 @@ const userSchema = new Schema({
         default: null
     },
     image: {
+        type: String,
+        trim: true,
+        default: null
+    },
+    isEmailVerified: {
+        type: Boolean,
+        enum: [true, false],
+        default: false
+    },
+    emailVerificationCode: {
         type: String,
         trim: true,
         default: null

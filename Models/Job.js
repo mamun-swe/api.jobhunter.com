@@ -64,9 +64,17 @@ const jobSchema = new Schema({
         default: null
     },
     applicants: [{
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-        default: null
+        applicant: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            default: null
+        },
+        status: {
+            type: String,
+            trim: true,
+            default: "Pending",
+            enum: ["Pending", "Approved", "Canceled"]
+        }
     }],
     comments: [{
         type: Schema.Types.ObjectId,

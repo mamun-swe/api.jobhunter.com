@@ -14,6 +14,7 @@ userRouter.post("/upload-picture", Profile.UploadPicture)
 userRouter.get("/job", Job.Index)
 userRouter.post("/job", Job.Create)
 userRouter.get("/job/:id/applicants", Job.Applicants)
+userRouter.post("/job/change-status", Job.ChangeApplicationStatus)
 
 userRouter.get("/messages/:author/:to", Chat.GetMessages)
 

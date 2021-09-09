@@ -86,8 +86,17 @@ const Applicants = async (req, res, next) => {
         const { id } = req.params
         await CheckId(id)
 
-        const result = await Job.findById({ _id: id }, { title: 1, applicants: 1 })
-            .populate("applicants", "name email website description")
+        const result = await Job.findById(
+            { _id: id },
+            {
+                title: 1,
+                "applicants.applicant": 1,
+                "applicants.status": 1
+            })
+            .populate(
+                "applicants.applicant",
+                "name email phone permanentAddress presentAddress website description"
+            )
             .exec()
 
         if (!result) {
@@ -106,8 +115,42 @@ const Applicants = async (req, res, next) => {
     }
 }
 
+// Change application status
+const ChangeApplicationStatus = async (req, res, next) => {
+    try {
+        const { status, jobId, applicantId } = req.body
+
+        await CheckId(jobId)
+        await CheckId(applicantId)
+
+        const updateStatus = await Job.findOneAndUpdate({
+            $and: [
+                { _id: jobId },
+                { applicants: { $elemMatch: { applicant: applicantId } } }
+            ]
+        },
+            { $set: { "applicants.$.status": status } }
+        ).exec()
+
+        if (!updateStatus) {
+            return res.status(501).json({
+                status: false,
+                message: "Failed to update."
+            })
+        }
+
+        res.status(201).json({
+            status: true,
+            message: "Successfully status updated."
+        })
+    } catch (error) {
+        if (error) next(error)
+    }
+}
+
 module.exports = {
     Index,
     Create,
-    Applicants
+    Applicants,
+    ChangeApplicationStatus
 }

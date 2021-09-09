@@ -29,7 +29,14 @@ const Index = async (req, res, next) => {
 const Update = async (req, res, next) => {
     try {
         const id = req.user._id
-        const { name, website, description } = req.body
+        const {
+            name,
+            website,
+            description,
+            phone,
+            presentAddress,
+            permanentAddress
+        } = req.body
 
         // validate check
         const validate = await Validator.Update(req.body)
@@ -42,7 +49,16 @@ const Update = async (req, res, next) => {
 
         const updateAccount = await User.findByIdAndUpdate(
             { _id: id },
-            { $set: { name, website, description } },
+            {
+                $set: {
+                    name,
+                    website,
+                    description,
+                    phone,
+                    presentAddress,
+                    permanentAddress
+                }
+            },
             { $multi: false }
         ).exec()
 
@@ -66,12 +82,12 @@ const Update = async (req, res, next) => {
 const UpdatePassword = async (req, res, next) => {
     try {
         const id = req.user._id
-        const { newPassword } = req.body
+        const { oldPassword, newPassword } = req.body
 
-        if (!newPassword) {
+        if (!oldPassword && !newPassword) {
             return res.status(422).json({
                 status: false,
-                messgae: 'New password is required.'
+                messgae: 'Old & New password is required.'
             })
         }
 
@@ -81,6 +97,15 @@ const UpdatePassword = async (req, res, next) => {
             return res.status(404).json({
                 status: false,
                 message: 'Account not found.'
+            })
+        }
+
+        // Compare with old password
+        const result = await bcrypt.compare(oldPassword, account.password)
+        if (!result) {
+            return res.status(404).json({
+                status: false,
+                message: 'Invalid old password'
             })
         }
 
@@ -113,12 +138,13 @@ const UpdatePassword = async (req, res, next) => {
 // My Applications
 const MyApplications = async (req, res, next) => {
     try {
+        let data = []
         const id = req.user._id
 
         const result = await User.findById({ _id: id }, { applications: 1 })
             .populate({
                 path: "applications",
-                select: "title area location category jobType createdBy",
+                select: "title area location category jobType createdBy applicants",
                 populate: {
                     path: "createdBy",
                     select: "name website"
@@ -133,9 +159,24 @@ const MyApplications = async (req, res, next) => {
             })
         }
 
+        for (let i = 0; i < result.applications.length; i++) {
+            const element = result.applications[i]
+            const myApply = element.applicants.find(x => x.applicant == id)
+
+            data.push({
+                title: element.title,
+                location: element.location,
+                jobType: element.jobType,
+                createdBy: element.createdBy,
+                category: element.category,
+                area: element.area,
+                status: myApply && myApply.status ? myApply.status : "N/A"
+            })
+        }
+
         res.status(200).json({
             status: true,
-            applications: result.applications
+            applications: data
         })
     } catch (error) {
         if (error) next(error)

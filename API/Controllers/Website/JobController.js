@@ -11,7 +11,9 @@ const Index = async (req, res, next) => {
         let startDay = new Date()
         startDay.setUTCHours(0, 0, 0, 0)
 
-        const results = await Job.find({ "expiredAt": { "$gte": new Date(startDay) } })
+        const results = await Job.find({
+            "expiredAt": { "$gte": new Date(startDay) }
+        })
             .populate("createdBy", "name")
             .populate({
                 path: "comments",
@@ -116,7 +118,7 @@ const Apply = async (req, res, next) => {
         // Apply to job
         await Job.findOneAndUpdate(
             { _id: jobId },
-            { $push: { applicants: applicantId } },
+            { $push: { applicants: { applicant: applicantId } } },
             { new: true }
         ).exec()
 
@@ -133,7 +135,10 @@ const Apply = async (req, res, next) => {
         })
 
     } catch (error) {
-        if (error) next(error)
+        if (error) {
+            console.log(error)
+            next(error)
+        }
     }
 }
 
@@ -223,7 +228,7 @@ const JobComment = async (req, res, next) => {
 // Visit profile
 const Profile = async (req, res, next) => {
     try {
-        const {id} = req.params
+        const { id } = req.params
 
         let result = await User.findOne({ _id: id }, { password: 0 }).exec()
 

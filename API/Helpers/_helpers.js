@@ -1,4 +1,6 @@
 const fs = require("fs")
+const generateUniqueId = require("generate-unique-id")
+const nodemailer = require("nodemailer")
 
 // Single file upload
 const UploadFile = async (data, path) => {
@@ -26,13 +28,53 @@ const DeleteFile = (destination, file) => {
 
 // Get Host URL
 const Host = (req) => {
-    return req.protocol + '://' + req.get('host') + '/'
-    // return 'https://' + req.get('host') + '/'
+    // return req.protocol + '://' + req.get('host') + '/'
+    return 'https://' + req.get('host') + '/'
 }
 
+// Unique code generate
+const UniqueCode = async () => {
+    try {
+        const code = generateUniqueId({ length: 4, useLetters: false })
+        return code
+
+    } catch (error) {
+        return error
+    }
+}
+
+// Mail send
+const SendEmail = async (data) => {
+    try {
+        // Mail transporter
+        let transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'instantjobinfo@gmail.com',
+                pass: 'Instant90@'
+            }
+        })
+
+        // send mail with defined transport object
+        const mailService = await transporter.sendMail({
+            from: data.from, // sender address
+            to: data.to, // list of receivers
+            subject: data.subject, // Subject line
+            html: data.body // html body
+        })
+
+        if (!mailService) return false
+
+        return true
+    } catch (error) {
+        if (error) return false
+    }
+}
 
 module.exports = {
     UploadFile,
     DeleteFile,
-    Host
+    Host,
+    UniqueCode,
+    SendEmail
 }
