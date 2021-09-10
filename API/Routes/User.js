@@ -3,6 +3,7 @@ const userRouter = express.Router()
 const Profile = require("../Controllers/User/ProfileController")
 const Job = require("../Controllers/User/JobController")
 const Chat = require("../Controllers/User/ChatController")
+const Rating = require("../Controllers/User/RatingController")
 
 userRouter.get("/profile", Profile.Index)
 userRouter.put("/profile", Profile.Update)
@@ -17,5 +18,7 @@ userRouter.get("/job/:id/applicants", Job.Applicants)
 userRouter.post("/job/change-status", Job.ChangeApplicationStatus)
 
 userRouter.get("/messages/:author/:to", Chat.GetMessages)
+
+userRouter.post("/rating", Rating.Store)
 
 module.exports = { userRouter }

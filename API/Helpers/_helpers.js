@@ -71,10 +71,33 @@ const SendEmail = async (data) => {
     }
 }
 
+// Rating calculator
+const RatingCalculator = data => {
+    let ratings
+
+    if (data && data.length) {
+        const one = data.filter(x => x.rating === 1).length
+        const two = data.filter(x => x.rating === 2).length
+        const three = data.filter(x => x.rating === 3).length
+        const four = data.filter(x => x.rating === 4).length
+        const five = data.filter(x => x.rating === 5).length
+        ratings = [
+            { rating: 1, total: one },
+            { rating: 2, total: two },
+            { rating: 3, total: three },
+            { rating: 4, total: four },
+            { rating: 5, total: five },
+        ]
+    }
+
+    return ratings
+}
+
 module.exports = {
     UploadFile,
     DeleteFile,
     Host,
     UniqueCode,
-    SendEmail
+    SendEmail,
+    RatingCalculator
 }

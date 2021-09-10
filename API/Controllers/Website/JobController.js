@@ -4,10 +4,12 @@ const User = require("../../../Models/User")
 const Comment = require("../../../Models/Comment")
 const CheckId = require("../../Middleware/CheckId")
 const Validator = require("../../Validator/Comment")
+const { RatingCalculator } = require("../../Helpers/_helpers")
 
 // List of latest jobs
 const Index = async (req, res, next) => {
     try {
+        let jobs = []
         let startDay = new Date()
         startDay.setUTCHours(0, 0, 0, 0)
 
@@ -15,6 +17,7 @@ const Index = async (req, res, next) => {
             "expiredAt": { "$gte": new Date(startDay) }
         })
             .populate("createdBy", "name")
+            .populate("ratings", "rating")
             .populate({
                 path: "comments",
                 select: "comment user",
@@ -33,9 +36,35 @@ const Index = async (req, res, next) => {
             })
         }
 
+        for (let i = 0; i < results.length; i++) {
+            const element = results[i]
+            const ratings = await RatingCalculator(element.ratings)
+
+            jobs.push({
+                _id: element._id,
+                jobType: element.jobType,
+                description: element.description,
+                comments: element.comments,
+                ratings: ratings,
+                createdBy: element.createdBy,
+                title: element.title,
+                area: element.area,
+                location: element.location,
+                category: element.category,
+                startSalary: element.startSalary,
+                endSalary: element.endSalary,
+                salaryType: element.salaryType,
+                vacancy: element.vacancy,
+                expiredAt: element.expiredAt,
+                applicants: element.applicants,
+                createdAt: element.createdAt,
+                updatedAt: element.updatedAt
+            })
+        }
+
         res.status(200).json({
             status: true,
-            jobs: results
+            jobs: jobs
         })
     } catch (error) {
         if (error) next(error)
@@ -145,6 +174,7 @@ const Apply = async (req, res, next) => {
 // Search job
 const Search = async (req, res, next) => {
     try {
+        let jobs = []
         let startDay = new Date()
         startDay.setUTCHours(0, 0, 0, 0)
         const { category, area } = req.query
@@ -157,6 +187,7 @@ const Search = async (req, res, next) => {
             ]
         })
             .populate("createdBy", "name")
+            .populate("ratings", "rating")
             .populate({
                 path: "comments",
                 select: "comment user",
@@ -175,12 +206,36 @@ const Search = async (req, res, next) => {
             })
         }
 
+        for (let i = 0; i < results.length; i++) {
+            const element = results[i]
+            const ratings = await RatingCalculator(element.ratings)
+
+            jobs.push({
+                _id: element._id,
+                jobType: element.jobType,
+                description: element.description,
+                comments: element.comments,
+                ratings: ratings,
+                createdBy: element.createdBy,
+                title: element.title,
+                area: element.area,
+                location: element.location,
+                category: element.category,
+                startSalary: element.startSalary,
+                endSalary: element.endSalary,
+                salaryType: element.salaryType,
+                vacancy: element.vacancy,
+                expiredAt: element.expiredAt,
+                applicants: element.applicants,
+                createdAt: element.createdAt,
+                updatedAt: element.updatedAt
+            })
+        }
+
         res.status(200).json({
             status: true,
-            jobs: results
+            jobs: jobs
         })
-
-
     } catch (error) {
         if (error) next(error)
     }

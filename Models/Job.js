@@ -80,6 +80,11 @@ const jobSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Comments',
         default: null
+    }],
+    ratings: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Rating',
+        default: null
     }]
 }, {
     timestamps: true
