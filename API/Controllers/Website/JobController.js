@@ -4,7 +4,7 @@ const User = require("../../../Models/User")
 const Comment = require("../../../Models/Comment")
 const CheckId = require("../../Middleware/CheckId")
 const Validator = require("../../Validator/Comment")
-const { RatingCalculator } = require("../../Helpers/_helpers")
+const { RatingCalculator, Host } = require("../../Helpers/_helpers")
 
 // List of latest jobs
 const Index = async (req, res, next) => {
@@ -293,6 +293,8 @@ const Profile = async (req, res, next) => {
                 message: "Account not found."
             })
         }
+
+        result.image = result.image ? Host(req) + "uploads/users/" + result.image : null
 
         res.status(200).json({
             status: true,
