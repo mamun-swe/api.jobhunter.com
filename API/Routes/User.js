@@ -18,6 +18,7 @@ userRouter.get("/job/:id/applicants", Job.Applicants)
 userRouter.post("/job/change-status", Job.ChangeApplicationStatus)
 
 userRouter.get("/messages/:author/:to", Chat.GetMessages)
+userRouter.get("/messages/users", Chat.AllUsers)
 
 userRouter.post("/rating", Rating.Store)
 

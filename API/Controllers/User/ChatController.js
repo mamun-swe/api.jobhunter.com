@@ -1,4 +1,6 @@
+const Users = require("../../../Models/User")
 const Message = require("../../../Models/Message")
+const { Host } = require("../../Helpers/_helpers")
 
 // Store message
 const Store = async (data, room) => {
@@ -52,7 +54,40 @@ const GetMessages = async (req, res, next) => {
     }
 }
 
+// Get all users
+const AllUsers = async (req, res, next) => {
+    try {
+
+        const users = []
+        const results = await Users.find(
+            { _id: { $ne: req.user._id } },
+            { name: 1, image: 1 }
+        )
+            .sort({ name: 1 })
+            .exec()
+
+        if (results && results.length) {
+            for (let i = 0; i < results.length; i++) {
+                const element = results[i]
+                users.push({
+                    _id: element._id,
+                    name: element.name,
+                    image: element.image ? Host(req) + "uploads/users/" + element.image : null
+                })
+            }
+        }
+
+        res.status(200).json({
+            status: false,
+            data: users
+        })
+    } catch (error) {
+        if (error) next(error)
+    }
+}
+
 module.exports = {
     Store,
-    GetMessages
+    GetMessages,
+    AllUsers
 }
