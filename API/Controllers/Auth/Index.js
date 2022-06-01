@@ -28,12 +28,12 @@ const Login = async (req, res, next) => {
             })
         }
 
-        if (!account.isEmailVerified) {
-            return res.status(404).json({
-                status: false,
-                message: 'E-mail verification need.'
-            })
-        }
+        // if (!account.isEmailVerified) {
+        //     return res.status(404).json({
+        //         status: false,
+        //         message: 'E-mail verification need.'
+        //     })
+        // }
 
         // Compare with password
         const result = await bcrypt.compare(password, account.password)
@@ -95,35 +95,29 @@ const Register = async (req, res, next) => {
         })
 
         // Mail data
-        const mailData = {
-            from: '"Instant Job" <no-reply@instantjob.com>',
-            to: email,
-            subject: "Verification code",
-            body: `<p>Verify your account <b><a href="${process.env.APP_URL}/api/v1/auth/verify-account?email=${email}&code=${randomCode}">Click me to Verify</a></b></p>`,
-        }
+        // const mailData = {
+        //     from: '"Instant Job" <no-reply@instantjob.com>',
+        //     to: email,
+        //     subject: "Verification code",
+        //     body: `<p>Verify your account <b><a href="${process.env.APP_URL}/api/v1/auth/verify-account?email=${email}&code=${randomCode}">Click me to Verify</a></b></p>`,
+        // }
 
-        // Sent verification code to e-mail
-        const isMailSent = await SendEmail(mailData)
-        if (!isMailSent) {
-            return res.status(501).json({
-                status: false,
-                message: 'Failed to create account.'
-            })
-        }
+        // // Sent verification code to e-mail
+        // const isMailSent = await SendEmail(mailData)
+        // if (!isMailSent) {
+        //     return res.status(501).json({
+        //         status: false,
+        //         message: 'Failed to create account.'
+        //     })
+        // }
 
         // Create user account
-        const saveUser = await newUser.save()
-        if (!saveUser)
-            return res.status(501).json({
-                status: false,
-                message: 'Failed to create account.'
-            })
+        await newUser.save()
 
         res.status(201).json({
             status: true,
             message: 'Successfully account created. verify you e-mail address.'
         })
-
     } catch (error) {
         if (error) next(error)
     }

@@ -29,7 +29,7 @@ const DeleteFile = (destination, file) => {
 // Get Host URL
 const Host = (req) => {
     // return req.protocol + '://' + req.get('host') + '/'
-    return 'https://' + req.get('host') + '/'
+    return 'http://' + req.get('host') + '/'
 }
 
 // Unique code generate

@@ -23,6 +23,7 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(nocache())
 
+// app.use(express.static("uploads"))
 app.use('/uploads', express.static('uploads/'))
 app.use('/uploads/users', express.static('uploads/users/'))
 
